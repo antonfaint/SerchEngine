@@ -1,0 +1,27 @@
+{% extends 'search_eng/base.html' %}
+    {% block content %}
+
+    <h1>Query for url</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.query }}
+        <input type="submit" >
+    </form>
+
+
+    {% for index in object_list %}
+        <div class="url_object">
+
+            <a href={{ index.index_url }}> {{ index.index_url }} </a>
+            <div class="url_data">
+                <a href={{ index.url }}>{{ index.url }} </a>
+            </div>
+
+        </div>
+
+
+
+    {% endfor %}
+
+
+{%  endblock %}

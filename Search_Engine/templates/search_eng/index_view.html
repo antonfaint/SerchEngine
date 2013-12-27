@@ -1,0 +1,26 @@
+{% extends 'search_eng/base.html' %}
+
+{% block extrahead %}
+
+{% endblock %}
+
+{% block content %}
+
+{% for index in object_list %}
+    <div class="url_object">
+
+        <a href={{ index.index_url }}> {{ index.index_url }} </a>
+        <div class="url_data">
+            {{ index.pk }}
+        </div>
+
+    </div>
+
+
+
+{% endfor %}
+
+
+
+
+{%  endblock %}

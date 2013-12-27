@@ -1,0 +1,9 @@
+{% extends 'search_eng/base.html' %}
+{% block content %}
+    <h1>Create Index for Url</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.url }}
+        <input type="submit" >
+    </form>
+{%  endblock %}
