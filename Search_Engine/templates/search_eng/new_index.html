@@ -3,7 +3,13 @@
     <h1>Create Index for Url</h1>
     <form method="post">
         {% csrf_token %}
-        {{ form.url }}
+        <div class="depth_field">
+            {{ form.depth }}
+        </div>
+        <div class="url_field">
+            {{ form.url }}
+        </div>
+
         <input type="submit" >
     </form>
 {%  endblock %}

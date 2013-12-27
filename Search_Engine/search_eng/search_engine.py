@@ -2,7 +2,6 @@
 #from  nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet
 import nltk
-#import pymorphy
 from urllib2 import urlopen
 from BeautifulSoup import BeautifulSoup, SoupStrainer
 from Queue import Queue
@@ -14,7 +13,7 @@ wordPattern_en = re.compile("((?:[a-zA-Z]+[-']?)*[a-zA-Z]+)")
 
 MAX_DEPTH = 3
 
-class Link_index:
+class Link_Index:
     def __init__( self, url, w, pos_list ):
         self.url = url
         self.weight = w
@@ -44,7 +43,7 @@ def Normalize_en(word ):
         return ""
 
 
-class IndexGenerator:
+class Index_Generator:
     def __init__(self):
         self.index_dict = {}
         self.current_url = ""
@@ -62,7 +61,7 @@ class IndexGenerator:
             n_word = Normalize(  word )
             if n_word != "":
                 if n_word not in current_index_dict:
-                    current_index_dict[n_word] = Link_index( self.current_url, 1, [ pos ] )
+                    current_index_dict[n_word] = Link_Index( self.current_url, 1, [ pos ] )
                 else:
                     current_index_dict[n_word].update( pos )
             pos = pos + 1
@@ -81,36 +80,31 @@ class IndexGenerator:
 
 
 
-def get_page(url):
-	try:
-		f = urlopen(url)
-		page = f.read()
-		f.close()
-		return page
-	except:
-		return ""
-	return ""
+#urllib2.urlopen has no attribute '__exit__'
+# so use open close
+def Get_page(url):
+	f = urlopen(url)
+	page = f.read()
+	f.close()
+	return page
 
 
-def link_generator( html ):
+def Link_generator( html ):
     for link in BeautifulSoup( html, parseOnlyThese=SoupStrainer('a') ):
         if link.has_key( 'href' ):
             if str( link[ 'href' ] ).startswith( 'http' ):
                 yield link[ 'href' ]
 
 
-
+# Глубина обхода при построениии индекса
 def Create_index_from_url( url, depth ):
-    url_index = {}
-    word_index_dict = {}
     if depth > MAX_DEPTH:
         return []
     url_queue = Queue()
     url_queue.put( url )
     checked = []
-    page_index_list = []
 
-    IndexGen = IndexGenerator()
+    IndexGen = Index_Generator()
     while not url_queue.empty() :
 
         current_url = url_queue.get()
@@ -118,12 +112,12 @@ def Create_index_from_url( url, depth ):
         checked.append( current_url )
 
         try:
-            html = get_page( current_url )
+            html = Get_page( current_url )
         except:
             print "Exception"
             continue
         if depth > 0:
-            for link in link_generator( html ):
+            for link in Link_generator( html ):
                 #print link
                 if link not in checked:
                     url_queue.put( link )
@@ -131,16 +125,15 @@ def Create_index_from_url( url, depth ):
 
         html = nltk.clean_html( html )
         IndexGen.gen_url_index( current_url, html )
+        result_index = {}
+        result_index = IndexGen.get_index_dict()
+        for key in result_index:
+            result_index[key].sort()
 
-        Result = IndexGen.get_index_dict()
-        for key in Result:
-            Result[key].sort()
+    return result_index
 
 
-    return Result
-
-
-class Query_info:
+class Query_Info:
     def __init__(self, url,  w):
         self.url = url
         self.num_word = 1
@@ -159,7 +152,7 @@ class Query_info:
 
 
 
-def query_weight( query_list_word, index ):
+def Query_weight( query_list_word, index ):
 
     url_dict = {}
     for word in query_list_word:
@@ -169,7 +162,7 @@ def query_weight( query_list_word, index ):
                 if url_info.url in url_dict:
                     url_dict[ url_info.url ].update( url_info.weight )
                 else:
-                    url_dict[ url_info.url ] = Query_info( url_info.url, url_info.weight )
+                    url_dict[ url_info.url ] = Query_Info( url_info.url, url_info.weight )
     Result = []
     for key in url_dict:
         Result.append( url_dict[ key ] )
@@ -188,7 +181,7 @@ def Query_run( text_query, index ):
             query_norm_list.append( n_word )
 
     print query_norm_list
-    return query_weight( query_norm_list, index )
+    return Query_weight( query_norm_list, index )
 
 
 # Может быть протестированно без джанго, как отдельный модуль
@@ -205,6 +198,7 @@ def Test():
             print str(  url_info.url ) + "  " + str(  url_info.weight ) + "  " +str(  url_info.pos_list )
         print "*****************"
     print time() - t
+
 def TestQuery():
     t = time()
     Index = Create_index_from_url( "http://stackoverflow.com/questions/17669952/finding-proper-nouns-using-nltk-wordnet", 1 )
